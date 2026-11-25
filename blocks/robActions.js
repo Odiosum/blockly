@@ -191,6 +191,9 @@ Blockly.Blocks['robActions_motor_on'] = {
                     [Blockly.Msg.MOTOR + ' ' + Blockly.Msg.MOTOR_RIGHT, 'RIGHT']
                 ];
                 break;
+            case 'esp32py':
+                ports = [['Grabber', 'Grabber']];
+                break;
             case 'mbot2':
             case 'wedo':
             case 'joycar':
@@ -305,6 +308,8 @@ Blockly.Blocks['robActions_motor_on_for'] = {
                 [Blockly.Msg.MOTOR + ' ' + Blockly.Msg.MOTOR_LEFT, 'LEFT'],
                 [Blockly.Msg.MOTOR + ' ' + Blockly.Msg.MOTOR_RIGHT, 'RIGHT']
             ];
+        } else if (this.workspace.device === 'esp32py') {
+            ports = [['Grabber', 'Grabber']];
         }
         var motorPort = new Blockly.FieldDropdown(ports);
         if (this.workspace.device === 'arduino' || this.workspace.device === 'nano33ble') {
@@ -345,7 +350,11 @@ Blockly.Blocks['robActions_motor_on_for'] = {
                 .appendField(Blockly.Msg.ROUNDS_PER_MINUTE_SPEED, 'RPM')
                 .setCheck('Number');
         } else {
-            this.appendValueInput('POWER')
+            var powerInput = this.appendValueInput('POWER');
+            if (this.workspace.device === 'esp32py') {
+                powerInput.appendField(Blockly.Msg.MOTOR_PORT);
+            }
+            powerInput
                 .appendField(motorPort, 'MOTORPORT')
                 .appendField(Blockly.Msg.ON)
                 .appendField(Blockly.Msg.MOTOR_SPEED)
@@ -555,6 +564,9 @@ Blockly.Blocks['robActions_motor_stop'] = {
                 [Blockly.Msg.MOTOR + ' ' + Blockly.Msg.MOTOR_RIGHT, 'RIGHT']
             ];
         }
+        if (this.workspace.device === 'esp32py') {
+            ports = [['Grabber', 'Grabber']];
+        }
         var motorPort = new Blockly.FieldDropdown(ports);
         if (this.workspace.device === 'wedo' || this.workspace.device === 'joycar') {
             this.action = 'MOTOR';
@@ -578,7 +590,11 @@ Blockly.Blocks['robActions_motor_stop'] = {
                 [Blockly.Msg.MOTOR_FLOAT, 'FLOAT'],
                 [Blockly.Msg.MOTOR_BRAKE, 'NONFLOAT']
             ]);
-            this.appendDummyInput().appendField(Blockly.Msg.MOTOR_STOP).appendField(motorPort, 'MOTORPORT').appendField(mode, 'MODE');
+            var input = this.appendDummyInput().appendField(Blockly.Msg.MOTOR_STOP);
+            if (this.workspace.device === 'esp32py') {
+                input.appendField(Blockly.Msg.MOTOR_PORT);
+            }
+            input.appendField(motorPort, 'MOTORPORT').appendField(mode, 'MODE');
         }
         this.setPreviousStatement(true);
         this.setNextStatement(true);
@@ -646,7 +662,7 @@ Blockly.Blocks['robActions_motorDiff_on_for'] = {
                 .appendField(Blockly.Msg.MOTOR_SPEED)
                 .setCheck('Number');
         }
-        if (this.workspace.device === 'botnroll' || this.workspace.device === 'mbot' || this.workspace.device === 'thymio' || this.workspace.device === 'joycar') {
+        if (this.workspace.device === 'botnroll' || this.workspace.device === 'mbot' || this.workspace.device === 'thymio' || this.workspace.device === 'joycar' || this.workspace.device === 'esp32py') {
             this.appendValueInput('DISTANCE')
                 .setAlign(Blockly.ALIGN_RIGHT)
                 .appendField(Blockly.Msg.SENSOR_TIME + ' ms')
@@ -657,7 +673,7 @@ Blockly.Blocks['robActions_motorDiff_on_for'] = {
         this.setPreviousStatement(true);
         this.setNextStatement(true);
         this.setBlocking(true);
-        this.setTooltip(Blockly.Msg.MOTORDIFF_ON_FOR_TOOLTIP);
+        this.setTooltip(this.workspace.device === 'esp32py' ? Blockly.Msg.MOTOR_ON_FOR_TOOLTIP_MS : Blockly.Msg.MOTORDIFF_ON_FOR_TOOLTIP);
     }
 };
 
@@ -742,7 +758,7 @@ Blockly.Blocks['robActions_motorDiff_turn_for'] = {
                 .appendField(Blockly.Msg.MOTOR_SPEED)
                 .setCheck('Number');
         }
-        if (this.workspace.device === 'botnroll' || this.workspace.device === 'mbot' || this.workspace.device === 'thymio' || this.workspace.device === 'joycar') {
+        if (this.workspace.device === 'botnroll' || this.workspace.device === 'mbot' || this.workspace.device === 'thymio' || this.workspace.device === 'joycar' || this.workspace.device === 'esp32py') {
             this.appendValueInput('DEGREE')
                 .setAlign(Blockly.ALIGN_RIGHT)
                 .appendField(Blockly.Msg.SENSOR_TIME + ' ms')
@@ -753,7 +769,7 @@ Blockly.Blocks['robActions_motorDiff_turn_for'] = {
         this.setPreviousStatement(true);
         this.setNextStatement(true);
         this.setBlocking(true);
-        this.setTooltip(Blockly.Msg.MOTORDIFF_TURN_FOR_TOOLTIP);
+        this.setTooltip(this.workspace.device === 'esp32py' ? Blockly.Msg.MOTOR_ON_FOR_TOOLTIP_MS : Blockly.Msg.MOTORDIFF_TURN_FOR_TOOLTIP);
     }
 };
 
@@ -842,7 +858,7 @@ Blockly.Blocks['robActions_motorDiff_curve_for'] = {
                 .appendField(Blockly.Msg.MOTOR_RIGHT)
                 .setCheck('Number');
         }
-        if (this.workspace.device === 'botnroll' || this.workspace.device === 'mbot' || this.workspace.device === 'thymio' || this.workspace.device === 'joycar') {
+        if (this.workspace.device === 'botnroll' || this.workspace.device === 'mbot' || this.workspace.device === 'thymio' || this.workspace.device === 'joycar' || this.workspace.device === 'esp32py') {
             this.appendValueInput('DISTANCE')
                 .setAlign(Blockly.ALIGN_RIGHT)
                 .appendField(Blockly.Msg.SENSOR_TIME + ' ms')
@@ -853,7 +869,7 @@ Blockly.Blocks['robActions_motorDiff_curve_for'] = {
         this.setPreviousStatement(true);
         this.setNextStatement(true);
         this.setBlocking(true);
-        this.setTooltip(Blockly.Msg.MOTORDIFF_ON_FOR_TOOLTIP);
+        this.setTooltip(this.workspace.device === 'esp32py' ? Blockly.Msg.MOTOR_ON_FOR_TOOLTIP_MS : Blockly.Msg.MOTORDIFF_ON_FOR_TOOLTIP);
     }
 };
 
@@ -1330,7 +1346,7 @@ Blockly.Blocks['robActions_serial_print'] = {
 
 Blockly.Blocks['robActions_write_pin'] = {
     init: function() {
-        this.setColour(Blockly.CAT_ACTION_RGB);
+        this.setColour(this.workspace.device === 'esp32py' ? '#5f74d6' : Blockly.CAT_ACTION_RGB);
         this.dropDownPorts = getConfigPorts('digitalin');
         var that = this;
         var valueType = new Blockly.FieldDropdown(
@@ -1398,7 +1414,8 @@ Blockly.Blocks['robActions_write_pin'] = {
         if (this.dropDownPorts.arrow_ && this.dropDownPorts.menuGenerator_.length > 1) {
             this.dropDownPorts.arrow_.replaceChild(document.createTextNode(' ' + Blockly.FieldDropdown.ARROW_CHAR), this.dropDownPorts.arrow_.childNodes[0]);
         }
-        this.dropDownPorts.setValue(this.dropDownPorts.menuGenerator_[0][0]);
+        var firstPort = this.dropDownPorts.menuGenerator_[0];
+        this.dropDownPorts.setValue(this.workspace.device === 'esp32py' ? firstPort[1] : firstPort[0]);
     }
 };
 

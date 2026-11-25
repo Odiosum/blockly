@@ -9,6 +9,49 @@ You use this git repo to build the `msg` directory and the `blockly-compressed.j
 
 ## Build the Resources for the Open-Roberta Lab
 
+### Rebuild the core artifact locally
+
+For core/block changes, use Python 3.12+, Java, `patch`, and the pinned local
+Closure compiler JAR. This path does not install dependencies or contact an
+online compiler. Install the compiler and the DOM test package once in a separate tools directory:
+
+```bash
+npm install --prefix /tmp/blockly-tools --no-audit --no-fund --ignore-scripts \
+  --save-exact google-closure-compiler-java@20200719.0.0 @xmldom/xmldom@0.9.12
+python3 build_core.py \
+  --compiler-jar /tmp/blockly-tools/node_modules/google-closure-compiler-java/compiler.jar \
+  --output /tmp/blockly_compressed.js
+node tests/esp32py_core_test.js /tmp/blockly_compressed.js \
+  /tmp/blockly-tools/node_modules/@xmldom/xmldom
+```
+
+The ESP32Py test takes both paths explicitly, so its DOM dependency is not a
+repository or production dependency.
+
+`build_core.py` uses the existing compiler flags and the repository's
+`z-Docker/closure-library.tgz` in a temporary directory. It applies
+`z-Docker/closure-library-openroberta.patch` to preserve the `addChildAt` DOM
+reordering behavior already present in the Lab's upstream artifact: remove an
+existing child before resolving its new DOM index. The bundled Closure source
+otherwise inserts a forward-moving child at a different position. The patch
+must apply without fuzz; compilation fails if the expected dependency source
+or compiler version is unavailable. The script prints dependency/output hashes.
+
+Dependency SHA-256 values used for the verified build:
+
+- Closure archive: `c3f9a52424c1f725823db980186269500f96c5f9a7074a9c6081f72e63269384`
+- Compiler JAR 20200719.0.0: `ffee421d69c5a1ddd7b3cbdfdc9ee25c63da262b0960d93a83aa29fe79d8ee28`
+
+This builds only `blockly_compressed.js`; it uses the checked-in `msg/js`
+translations. When changing messages, regenerate them with the full legacy
+build below, then run `build_core.py` before copying the core artifact to Lab.
+Never manually edit the compressed output. ESP32 definitions are in
+`blocks/robConfigDefinitions.js`, `blocks/robSensorDefinitions.js`,
+`blocks/robActions.js`, and `blocks/robSensors.js`; modifications to shared
+initializers and helpers are explicitly guarded by the ESP32 device identifier.
+
+### Full legacy build, including translations
+
 On linux systems one possibility is
 
 -   you have the closure-library next to this project

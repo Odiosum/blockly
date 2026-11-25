@@ -69,6 +69,14 @@ Blockly.Blocks.robConfigDefinitions['pinsDigital'].nano33ble = function() {
     array = array.concat(createPins(0, 7, 'A', 'A'));
     return array;
 };
+Blockly.Blocks.robConfigDefinitions['pinsDigital'].esp32py = function() {
+    return [
+        ['4', '4'], ['13', '13'], ['14', '14'], ['16', '16'], ['17', '17'],
+        ['18', '18'], ['19', '19'], ['21', '21'], ['22', '22'], ['23', '23'],
+        ['25', '25'], ['26', '26'], ['27', '27'], ['32', '32'], ['33', '33'],
+        ['34', '34'], ['35', '35'], ['36', '36'], ['39', '39']
+    ];
+};
 Blockly.Blocks.robConfigDefinitions['pinsDigital'].mega = function() {
     var array = createPins(0, 53);
     array = array.concat(createPins(0, 15, 'A', 'A'));
@@ -162,6 +170,13 @@ Blockly.Blocks.robConfigDefinitions['pinsDigitalWrite'].robotino = function() {
     ];
     return array;
 };
+Blockly.Blocks.robConfigDefinitions['pinsDigitalWrite'].esp32py = function() {
+    return [
+        ['4', '4'], ['13', '13'], ['14', '14'], ['16', '16'], ['17', '17'],
+        ['18', '18'], ['19', '19'], ['21', '21'], ['22', '22'], ['23', '23'],
+        ['25', '25'], ['26', '26'], ['27', '27'], ['32', '32'], ['33', '33']
+    ];
+};
 
 Blockly.Blocks.robConfigDefinitions['pinsAnalog'] = {};
 Blockly.Blocks.robConfigDefinitions['pinsAnalog'].uno = function() {
@@ -175,6 +190,11 @@ Blockly.Blocks.robConfigDefinitions['pinsAnalog'].nano = function() {
 };
 Blockly.Blocks.robConfigDefinitions['pinsAnalog'].nano33ble = function() {
     return createPins(0, 7, 'A', 'A');
+};
+Blockly.Blocks.robConfigDefinitions['pinsAnalog'].esp32py = function() {
+    return [
+        ['32', '32'], ['33', '33'], ['34', '34'], ['35', '35'], ['36', '36'], ['39', '39']
+    ];
 };
 Blockly.Blocks.robConfigDefinitions['pinsAnalog'].mega = function() {
     return createPins(0, 15, 'A', 'A');
@@ -252,6 +272,13 @@ Blockly.Blocks.robConfigDefinitions['pinsAnalogWrite'].nano33ble = function() {
     var part2 = createPins(5, 6, 'D');
     var part3 = createPins(9, 11, 'D');
     return part1.concat(part2).concat(part3);
+};
+Blockly.Blocks.robConfigDefinitions['pinsAnalogWrite'].esp32py = function() {
+    return [
+        ['4', '4'], ['13', '13'], ['14', '14'], ['16', '16'], ['17', '17'],
+        ['18', '18'], ['19', '19'], ['21', '21'], ['22', '22'], ['23', '23'],
+        ['25', '25'], ['26', '26'], ['27', '27'], ['32', '32'], ['33', '33']
+    ];
 };
 Blockly.Blocks.robConfigDefinitions['pinsAnalogWrite'].mega = function() {
     var part1 = createPins(2, 13);
@@ -2116,6 +2143,16 @@ confBlocks.digitalout.raspberrypi = {
     pins: Blockly.Blocks.robConfigDefinitions['pinsRaspberrypi'],
     sensor: true
 };
+confBlocks.digitalout.esp32py = {
+    title: 'DIGITALOUT',
+    ports: [
+        ['SENSOR_PIN', 'OUTPUT']
+    ],
+    pins: function(a) {
+        return Blockly.Blocks.robConfigDefinitions['pinsDigital'][a];
+    },
+    sensor: true
+};
 
 confBlocks.analogout = {};
 confBlocks.analogout.arduino = {
@@ -2143,6 +2180,16 @@ confBlocks.analogout.calliope = {
 confBlocks.analogout.microbit = confBlocks.analogout.calliope;
 confBlocks.analogout.microbitv2 = confBlocks.analogout.microbit;
 confBlocks.analogout.joycar = confBlocks.analogout.microbitv2;
+confBlocks.analogout.esp32py = {
+    title: 'ANALOGOUT',
+    ports: [
+        ['SENSOR_PIN', 'OUTPUT']
+    ],
+    pins: function(a) {
+        return Blockly.Blocks.robConfigDefinitions['pinsAnalog'][a];
+    },
+    sensor: true
+};
 
 
 confBlocks.digitalin = {};
@@ -2190,6 +2237,16 @@ confBlocks.digitalin.raspberrypi = {
     pins: Blockly.Blocks.robConfigDefinitions['pinsRaspberrypi'],
     sensor: false
 };
+confBlocks.digitalin.esp32py = {
+    title: 'DIGITALIN',
+    ports: [
+        ['SENSOR_PIN', 'INPUT']
+    ],
+    pins: function(a) {
+        return Blockly.Blocks.robConfigDefinitions['pinsDigitalWrite'][a];
+    },
+    sensor: false
+};
 
 confBlocks.analogin = {};
 confBlocks.analogin.arduino = {
@@ -2216,6 +2273,16 @@ confBlocks.analogin.calliope = {
 confBlocks.analogin.microbit = confBlocks.analogin.calliope;
 confBlocks.analogin.microbitv2 = confBlocks.analogin.calliope;
 confBlocks.analogin.joycar = confBlocks.analogin.microbitv2;
+confBlocks.analogin.esp32py = {
+    title: 'ANALOGIN',
+    ports: [
+        ['SENSOR_PIN', 'INPUT']
+    ],
+    pins: function(a) {
+        return Blockly.Blocks.robConfigDefinitions['pinsAnalogWrite'][a];
+    },
+    sensor: false
+};
 
 
 confBlocks.wireless = {};
@@ -2442,3 +2509,130 @@ function initConfBlocks() {
 };
 
 initConfBlocks();
+
+function esp32pyMessage(key, fallback) {
+    var messageKey = key.replace(/[^A-Za-z0-9]+/g, '_').replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase();
+    return Blockly.Msg[messageKey] || fallback;
+}
+
+function esp32pyOptions(key, options) {
+    return options.map(function(option) {
+        return [esp32pyMessage(option[2] || 'esp32py.choice.' + key + '.' + (option[1] || 'empty'), option[0]), option[1]];
+    });
+}
+
+function esp32pyFixed(key, value) {
+    return new Blockly.FieldDropdown([[esp32pyMessage(key, value), value]]);
+}
+
+function esp32pyField(field, value) {
+    if (field.kind === 'text') {
+        return new Blockly.FieldTextInput(value);
+    }
+    if (field.kind === 'device') {
+        return esp32pyFixed('esp32py.device.' + value, value);
+    }
+    if (field.kind === 'fixed') {
+        return esp32pyFixed(field.key || 'esp32py.fixed.' + field.name, value);
+    }
+    return new Blockly.FieldDropdown(esp32pyOptions(field.name, value));
+}
+
+function esp32pyProfile(type, confBlock, title, name, fields, colour, declarationType) {
+    var definition = {
+        confBlock: confBlock,
+        init: function() {
+            if (name.noPorts !== false) this.noPorts = true;
+            this.appendDummyInput().appendField(esp32pyMessage(name.titleKey || 'esp32py.' + type.replace('robConf_esp32py_', '') + '.title', title)).appendField(
+                name.editable ? new Blockly.FieldTextInput(name.value) : esp32pyFixed(name.key || 'esp32py.fixed.' + type + '.name', name.value), 'NAME');
+            fields.forEach(function(field) {
+                this.appendDummyInput().appendField(esp32pyMessage(field.labelKey || 'esp32py.row.' + field.name, field.label)).appendField(
+                    esp32pyField(field, field.value), field.name);
+            }, this);
+            if (declarationType) {
+                Blockly.Esp32py.installConfigDeclaration(this, declarationType);
+            }
+            if (name.tooltip) {
+                this.setTooltip(esp32pyMessage('esp32py.tooltip.referenceDefaults', name.tooltip));
+            }
+            this.setColour(colour || 180);
+        }
+    };
+    if (name.noPorts !== false) definition.noPorts = true;
+    Blockly.Blocks[type] = definition;
+}
+
+function esp32pyText(name, label, value, labelKey) {
+    return {name: name, label: label, value: value, kind: 'text', labelKey: labelKey};
+}
+function esp32pyChoice(name, label, value, labelKey) {
+    return {name: name, label: label, value: value, kind: 'choice', labelKey: labelKey};
+}
+function esp32pyFixedField(name, label, value, key) {
+    return {name: name, label: label, value: value, kind: 'fixed', key: key};
+}
+function esp32pyDevice(name, label, value) {
+    return {name: name, label: label, value: value, kind: 'device', labelKey: 'esp32py.row.device'};
+}
+
+var esp32pyReferenceTooltip = 'New toolbox blocks start with editable reference values. Set the pins and values to match your wiring before running.';
+esp32pyProfile('robConf_esp32py_drv8833', 'DRV8833_IN_IN', 'DRV8833 profile', {value: 'DRV8833', key: 'esp32py.fixed.driverName', tooltip: esp32pyReferenceTooltip, noPorts: false, titleKey: 'esp32py.driver.title'}, [
+    esp32pyChoice('driverKind', 'driver kind', [['select driver', ''], ['DRV8833 IN/IN', 'DRV8833_IN_IN']], 'esp32py.driver.kind'),
+    esp32pyText('leftIn1', 'left IN1', ''), esp32pyText('leftIn2', 'left IN2', ''),
+    esp32pyText('rightIn1', 'right IN1', ''), esp32pyText('rightIn2', 'right IN2', ''),
+    esp32pyChoice('leftInverted', 'left inverted', [['false', 'false'], ['true', 'true']]),
+    esp32pyChoice('rightInverted', 'right inverted', [['false', 'false'], ['true', 'true']]),
+    esp32pyText('pwmFrequency', 'PWM frequency', ''), esp32pyText('leftCalibration', 'left calibration', ''),
+    esp32pyText('rightCalibration', 'right calibration', ''),
+    esp32pyChoice('stopMode', 'stop mode', [['select stop mode', ''], ['COAST', 'COAST'], ['BRAKE', 'BRAKE']])
+], 180, null);
+esp32pyProfile('robConf_esp32py_board', 'ESP32PY_BOARD', 'ESP32Py board', {value: 'ESP32PY', key: 'esp32py.fixed.boardName'}, [
+    esp32pyChoice('boardKind', 'board kind', [['ESP32-WROOM-32 30-pin v1', 'ESP32_WROOM_32_30PIN_V1']])
+], 180, null);
+esp32pyProfile('robConf_esp32py_touch', 'ESP32PY_TOUCH', 'ESP32Py touch', {value: 'TOUCH', editable: true, tooltip: esp32pyReferenceTooltip}, [
+    esp32pyText('pin', 'GPIO pin', ''),
+    esp32pyChoice('activeLevel', 'active level', [['HIGH', 'HIGH'], ['LOW', 'LOW']]),
+    esp32pyChoice('biasMode', 'bias mode', [['EXTERNAL_PULLDOWN', 'EXTERNAL_PULLDOWN'], ['EXTERNAL_PULLUP', 'EXTERNAL_PULLUP'], ['INTERNAL_PULLDOWN', 'INTERNAL_PULLDOWN'], ['INTERNAL_PULLUP', 'INTERNAL_PULLUP']]),
+    esp32pyText('rcjPort', 'RCJ port', '')
+], 180, 'touch');
+esp32pyProfile('robConf_esp32py_light', 'ESP32PY_LIGHT', 'ESP32Py light', {value: 'LIGHT', editable: true, tooltip: esp32pyReferenceTooltip}, [
+    esp32pyText('pin', 'ADC1 GPIO pin', '', 'esp32py.row.adcPin'),
+    esp32pyText('rawDark', 'raw dark (0..4095)', ''), esp32pyText('rawLight', 'raw light (0..4095)', ''), esp32pyText('rcjPort', 'RCJ port', '')
+], 180, 'light');
+esp32pyProfile('robConf_esp32py_ultrasonic', 'ESP32PY_ULTRASONIC', 'ESP32Py ultrasonic', {value: 'ULTRASONIC', editable: true, tooltip: esp32pyReferenceTooltip}, [
+    esp32pyChoice('profileMode', 'profile', [['Simulation', 'SIMULATION'], ['Hardware', 'HARDWARE']]),
+    esp32pyText('triggerPin', 'trigger GPIO pin', ''), esp32pyText('echoPin', 'echo GPIO pin', ''),
+    esp32pyChoice('maxDistanceCm', 'maximum distance (cm)', [['250', '250']]), esp32pyChoice('timeoutUs', 'timeout (us)', [['20000', '20000']]),
+    esp32pyText('rcjPort', 'RCJ port', ''), esp32pyDevice('deviceModel', 'device', 'TRIGGER_ECHO_3V3'),
+    esp32pyChoice('echoVoltage', 'echo voltage', [['3V3', '3V3']]), esp32pyChoice('power', 'power', [['5V', '5V']]),
+    esp32pyChoice('supplyMode', 'supply', [['external regulated/common GND', 'EXTERNAL_REGULATED_COMMON_GND']])
+], 180, 'ultrasonic');
+esp32pyProfile('robConf_esp32py_colour', 'ESP32PY_COLOUR', 'ESP32Py colour', {value: 'COLOUR', editable: true}, [
+    esp32pyChoice('profileMode', 'profile', [['Simulation', 'SIMULATION'], ['Hardware', 'HARDWARE']]), esp32pyText('rcjPort', 'RCJ port (optional)', '', 'esp32py.row.rcjPortOptional'),
+    esp32pyDevice('deviceModel', 'device', 'TCS34725'), esp32pyFixedField('i2cProfile', 'I2C profile', 'I2C', 'esp32py.fixed.colourI2cProfile'),
+    esp32pyChoice('address', 'I2C address', [['0x29', '0x29']]), esp32pyChoice('interface', 'interface', [['I2C', 'I2C']]), esp32pyChoice('power', 'power', [['3V3', '3V3']]),
+    esp32pyText('whiteR', 'white raw red (1..65535)', ''), esp32pyText('whiteG', 'white raw green (1..65535)', ''), esp32pyText('whiteB', 'white raw blue (1..65535)', '')
+], Blockly.CAT_SENSOR_RGB, 'colour');
+esp32pyProfile('robConf_esp32py_inductive', 'ESP32PY_INDUCTIVE', 'ESP32Py inductive', {value: 'INDUCTIVE', editable: true}, [
+    esp32pyChoice('profileMode', 'profile', [['Simulation', 'SIMULATION'], ['Hardware', 'HARDWARE']]), esp32pyText('rcjPort', 'RCJ port (optional)', '', 'esp32py.row.rcjPortOptional'),
+    esp32pyDevice('deviceModel', 'device', 'OPEN_COLLECTOR_ACTIVE_LOW'), esp32pyFixedField('signalPin', 'signal GPIO', 'GPIO34', 'esp32py.fixed.inductiveSignalPin'),
+    esp32pyChoice('activeLevel', 'active level', [['LOW', 'LOW']]), esp32pyChoice('biasMode', 'bias', [['EXTERNAL_PULLUP', 'EXTERNAL_PULLUP']], 'esp32py.row.bias'),
+    esp32pyChoice('pullupOhms', 'pull-up ohms', [['10000', '10000']]), esp32pyChoice('pullupVoltage', 'pull-up voltage', [['3V3', '3V3']]),
+    esp32pyChoice('power', 'power', [['5V', '5V']]), esp32pyChoice('supplyMode', 'supply', [['external regulated/common GND', 'EXTERNAL_REGULATED_COMMON_GND']])
+], Blockly.CAT_SENSOR_RGB, 'inductive');
+
+function esp32pyAccessory(type, title, name, fields, colour) {
+    fields.forEach(function(field) {
+        if (field.kind === 'fixed') {
+            field.key = 'esp32py.fixed.' + type + '.' + field.name;
+        }
+    });
+    esp32pyProfile(type, type.replace('robConf_', '').toUpperCase(), title, {value: name}, fields, colour, null);
+}
+esp32pyAccessory('robConf_esp32py_i2c', 'ESP32Py I2C', 'I2C', [esp32pyFixedField('sdaPin', 'SDA', 'GPIO21'), esp32pyFixedField('sclPin', 'SCL', 'GPIO22'), esp32pyChoice('frequency', 'frequency', [['400000', '400000']]), esp32pyChoice('voltage', 'voltage', [['3V3', '3V3']])], 180);
+esp32pyAccessory('robConf_esp32py_gyro', 'ESP32Py gyro', '_K', [esp32pyDevice('deviceModel', 'device', 'MPU6050'), esp32pyFixedField('i2cProfile', 'I2C profile', 'I2C'), esp32pyChoice('address', 'address', [['0x68', '0x68']]), esp32pyChoice('interface', 'interface', [['I2C', 'I2C']]), esp32pyChoice('axis', 'axis', [['Z', 'Z']]), esp32pyChoice('angleMode', 'angle mode', [['RELATIVE_INTEGRATED', 'RELATIVE_INTEGRATED']]), esp32pyChoice('power', 'power', [['3V3', '3V3']])], Blockly.CAT_SENSOR_RGB);
+esp32pyAccessory('robConf_esp32py_touchkey', 'ESP32Py touchkeys', 'TOUCHKEY', [esp32pyFixedField('leftPin', 'left GPIO', 'GPIO4'), esp32pyFixedField('rightPin', 'right GPIO', 'GPIO13'), esp32pyFixedField('thresholdPercent', 'threshold percent', '70')], Blockly.CAT_SENSOR_RGB);
+esp32pyAccessory('robConf_esp32py_display', 'ESP32Py display', 'DISPLAY', [esp32pyDevice('deviceModel', 'device', 'SSD1306_128X64'), esp32pyFixedField('i2cProfile', 'I2C profile', 'I2C'), esp32pyChoice('address', 'address', [['0x3C', '0x3C']]), esp32pyChoice('interface', 'interface', [['I2C', 'I2C']]), esp32pyChoice('power', 'power', [['3V3', '3V3']])], 180);
+esp32pyAccessory('robConf_esp32py_buzzer', 'ESP32Py buzzer', 'BUZZER', [esp32pyDevice('deviceModel', 'device', 'PWM_BUZZER'), esp32pyFixedField('pin', 'GPIO', 'GPIO16'), esp32pyChoice('power', 'power', [['5V', '5V']]), esp32pyChoice('supplyMode', 'supply', [['external regulated/common GND', 'EXTERNAL_REGULATED_COMMON_GND']])], 180);
+esp32pyAccessory('robConf_esp32py_rgb', 'ESP32Py RGB', 'RGB', [esp32pyDevice('deviceModel', 'device', 'WS2812_GRB'), esp32pyFixedField('pin', 'GPIO', 'GPIO23'), esp32pyChoice('power', 'power', [['5V', '5V']]), esp32pyChoice('supplyMode', 'supply', [['external regulated/common GND', 'EXTERNAL_REGULATED_COMMON_GND']]), esp32pyChoice('seriesResistorOhms', 'data resistor ohms', [['330', '330']])], 180);
+esp32pyAccessory('robConf_esp32py_grabber', 'ESP32Py continuous servo', 'Grabber', [esp32pyDevice('deviceModel', 'device', 'CONTINUOUS_SERVO'), esp32pyFixedField('pin', 'GPIO', 'GPIO17'), esp32pyChoice('frequency', 'frequency', [['50', '50']]), esp32pyChoice('minPulseUs', 'min pulse us', [['700', '700']]), esp32pyChoice('maxPulseUs', 'max pulse us', [['2300', '2300']]), esp32pyChoice('neutralPulseUs', 'neutral pulse us', [['1500', '1500']]), esp32pyChoice('power', 'power', [['5V', '5V']]), esp32pyChoice('supplyMode', 'supply', [['external regulated/common GND', 'EXTERNAL_REGULATED_COMMON_GND']]), esp32pyChoice('bulkCapacitorUf', 'bulk capacitor uF', [['1000', '1000']])], 180);

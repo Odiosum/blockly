@@ -918,7 +918,8 @@ Blockly.Blocks['robSensors_generic'] = {
                             var fieldSensorPort = thisBlock.getField('SENSORPORT');
                             thisBlock.dependConfig.type = configBlockName;
                             fieldSensorPort.menuGenerator_ = dropDownPorts.menuGenerator_;
-                            fieldSensorPort.setValue(fieldSensorPort.menuGenerator_[0][0]);
+                            var firstPort = fieldSensorPort.menuGenerator_[0];
+                            fieldSensorPort.setValue(thisBlock.workspace.device === 'esp32py' ? firstPort[1] : firstPort[0]);
                             fieldSensorPort.arrow_ && fieldSensorPort.arrow_.replaceChild(document.createTextNode(' '), fieldSensorPort.arrow_.childNodes[0]);
                             if (fieldSensorPort.menuGenerator_.length > 1) {
                                 fieldSensorPort.arrow_
@@ -928,6 +929,9 @@ Blockly.Blocks['robSensors_generic'] = {
                     }
                 }
                 this.sensorMode_ = option;
+                if (this.workspace.device === 'esp32py' && sensor.esp32pyConfigType && Blockly.Esp32py && Blockly.Esp32py.refreshSensorSelector) {
+                    Blockly.Esp32py.refreshSensorSelector(this);
+                }
             };
             // this is a really special case for nao so far
             this.updatePort_ = function(option) {
@@ -961,8 +965,135 @@ Blockly.Blocks['robSensors_generic'] = {
                 this.sensorPort_ = option;
             };
         }
+        if (this.workspace.device === 'esp32py' && sensor.esp32pyConfigType && Blockly.Esp32py && Blockly.Esp32py.registerSensorSelector) {
+            Blockly.Esp32py.registerSensorSelector(this, sensor.esp32pyConfigType, sensor.esp32pyModeAware);
+        }
     }
 };
+
+Blockly.Esp32py = Blockly.Esp32py || {};
+(function(esp32py) {
+    var configurationWorkspace;
+    var configurationListener;
+    var refreshTimer;
+    var selectors = [];
+
+    function getConfigurationWorkspace() {
+        return Blockly.Workspace && Blockly.Workspace.getByContainer ? Blockly.Workspace.getByContainer('bricklyDiv') : undefined;
+    }
+    function noPort() {
+        return String(Blockly.Msg.CONFIGURATION_NO_PORT || 'CONFIGURATION_NO_PORT').toUpperCase();
+    }
+    function options(type, selected) {
+        var result = [];
+        var names = Object.create(null);
+        var workspace = getConfigurationWorkspace();
+        var blocks = workspace && workspace.getAllBlocks ? workspace.getAllBlocks() : [];
+        for (var i = 0; i < blocks.length; i++) {
+            if (!blocks[i] || typeof blocks[i].getConfigDecl !== 'function') continue;
+            var declarations = blocks[i].getConfigDecl.call(blocks[i]) || [];
+            for (var j = 0; j < declarations.length; j++) {
+                var declaration = declarations[j];
+                var name = declaration && String(declaration.name || '');
+                if (!name || String(declaration.type || '').toLowerCase() !== type || names[name]) continue;
+                names[name] = true;
+                result.push([name, name]);
+            }
+        }
+        var unavailable = noPort();
+        if (selected && selected !== unavailable && !names[selected]) result.unshift([selected, selected]);
+        if (result.length === 0) result.unshift([Blockly.Msg.ESP32PY_CONFIGURATION_NO_PORT || unavailable, unavailable]);
+        else if (selected === unavailable && result[0][1] !== unavailable) result.unshift([Blockly.Msg.ESP32PY_CONFIGURATION_NO_PORT || unavailable, unavailable]);
+        return result;
+    }
+    function refresh() {
+        ensureListener();
+        for (var i = selectors.length - 1; i >= 0; i--) {
+            var block = selectors[i];
+            if (!block || !block.workspace || typeof block.__esp32pyRefreshSensorOptions !== 'function') selectors.splice(i, 1);
+            else block.__esp32pyRefreshSensorOptions();
+        }
+    }
+    function scheduleRefresh() {
+        if (refreshTimer !== undefined) return;
+        if (typeof setTimeout !== 'function') {
+            refresh();
+            return;
+        }
+        refreshTimer = setTimeout(function() {
+            refreshTimer = undefined;
+            refresh();
+        }, 0);
+    }
+    function ensureListener() {
+        var workspace = getConfigurationWorkspace();
+        if (workspace === configurationWorkspace) return;
+        if (configurationWorkspace && configurationListener && configurationWorkspace.removeChangeListener) configurationWorkspace.removeChangeListener(configurationListener);
+        configurationWorkspace = workspace;
+        configurationListener = undefined;
+        if (!workspace || !workspace.addChangeListener) return;
+        configurationListener = function(event) {
+            if (event && event.isUiEvent) return;
+            if (event && Blockly.Events && event.type === Blockly.Events.DELETE) scheduleRefresh();
+            else refresh();
+        };
+        workspace.addChangeListener(configurationListener);
+    }
+
+    esp32py.refreshSensorSelector = function(block) {
+        var field = block && block.getField && block.getField('SENSORPORT');
+        if (!field) return;
+        var selected = String(field.getValue ? field.getValue() || '' : block.getFieldValue('SENSORPORT') || '');
+        var values = options(block.__esp32pySelectorType(), selected);
+        field.menuGenerator_ = values;
+        if (field.arrow_ && field.arrow_.childNodes && field.arrow_.childNodes.length) field.arrow_.replaceChild(document.createTextNode(values.length > 1 ? ' ' + (Blockly.FieldDropdown.ARROW_CHAR || '▼') : ''), field.arrow_.childNodes[0]);
+        if (field.render_) field.render_();
+    };
+    esp32py.registerSensorSelector = function(block, initialType, modeAwareColour) {
+        var field = block && block.getField && block.getField('SENSORPORT');
+        if (!field) return;
+        var typeForBlock = function() {
+            if (!modeAwareColour) return initialType;
+            return (block.sensorMode_ || block.getFieldValue('MODE')) === 'LIGHT' ? 'light' : 'colour';
+        };
+        block.__esp32pySelectorType = typeForBlock;
+        block.__esp32pyRefreshSensorOptions = function() { esp32py.refreshSensorSelector(block); };
+        block.dependConfig = function() { return {type: typeForBlock(), dropDown: field}; };
+        // XML and undo set the field directly. Keep unresolved values in the menu.
+        var setPort = field.setValue;
+        field.setValue = function(value) {
+            setPort.call(this, value);
+            esp32py.refreshSensorSelector(block);
+        };
+        if (modeAwareColour) {
+            var modeField = block.getField('MODE');
+            var originalModeSetValue = modeField.setValue;
+            modeField.setValue = function(value) {
+                originalModeSetValue.call(this, value);
+                if (block.sensorMode_ !== this.getValue()) block.updateShape_(this.getValue());
+            };
+        }
+        var originalDispose = block.onDispose;
+        block.onDispose = function() {
+            var index = selectors.indexOf(this);
+            if (index >= 0) selectors.splice(index, 1);
+            if (originalDispose) originalDispose.call(this);
+        };
+        if (selectors.indexOf(block) < 0) selectors.push(block);
+        ensureListener();
+        esp32py.refreshSensorSelector(block);
+    };
+    esp32py.installConfigDeclaration = function(block, type) {
+        block.getConfigDecl = function() { return [{type: type, name: this.getFieldValue('NAME')}]; };
+        var originalDispose = block.onDispose;
+        block.onDispose = function() {
+            if (originalDispose) originalDispose.call(this);
+            scheduleRefresh();
+        };
+        ensureListener();
+        refresh();
+    };
+})(Blockly.Esp32py);
 
 Blockly.Blocks['robSensors_generic_all'] = {
     /*- Generic sensor definition. Will create the following xml:
@@ -1380,7 +1511,8 @@ function hidePortIfOnlyInbuilt(block) {
         var input = block.inputList[i];
         for (var f = 0; f < input.fieldRow.length; f++) {
             var field = input.fieldRow[f];
-            if ((field.name === 'SENSORPORT' || field.name === 'ACTORPORT') && field.menuGenerator_.length < 2) {
+            if ((field.name === 'SENSORPORT' || field.name === 'ACTORPORT') &&
+                (block.workspace.device !== 'esp32py' || field.menuGenerator_) && field.menuGenerator_.length < 2) {
                 block.hide = {};
                 block.hide.name = field.name;
                 block.hide.value = field.getValue();

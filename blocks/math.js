@@ -758,6 +758,9 @@ Blockly.Blocks['math_on_list'] = {
   mutationToDom: function() {
     var container = document.createElement('mutation');
     container.setAttribute('op', this.getFieldValue('OP'));
+    if (this.workspace && this.workspace.device === 'esp32py' && this.__esp32pyAggregateMode !== undefined) {
+      container.setAttribute('mode', this.__esp32pyAggregateMode);
+    }
     return container;
   },
   /**
@@ -766,6 +769,9 @@ Blockly.Blocks['math_on_list'] = {
    * @this Blockly.Block
    */
   domToMutation: function(xmlElement) {
+    if (this.workspace && this.workspace.device === 'esp32py') {
+      this.__esp32pyAggregateMode = xmlElement.hasAttribute('mode') ? xmlElement.getAttribute('mode') : undefined;
+    }
     this.updateType_(xmlElement.getAttribute('op'));
   }
 };

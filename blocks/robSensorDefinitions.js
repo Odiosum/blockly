@@ -936,6 +936,7 @@ sensors.out.arduino = {
 };
 sensors.out.sensebox = sensors.out.arduino;
 sensors.out.robotino = sensors.out.arduino;
+sensors.out.esp32py = sensors.out.arduino;
 
 sensors.pin = {};
 sensors.pin.calliope = {
@@ -952,6 +953,13 @@ sensors.pin.calliope = {
 sensors.pin.microbit = sensors.pin.calliope;
 sensors.pin.microbitv2 = sensors.pin.calliope;
 sensors.pin.joycar = sensors.pin.microbitv2;
+sensors.pin.esp32py = {
+    title: 'PIN', modes: [{
+        name: 'ANALOG', type: 'Number', value: '100', op: 'NUM_REV'
+    }, {
+        name: 'DIGITAL', type: 'Number', value: '1', op: 'NUM_EQ'
+    }], ports: 'CONFIGURATION'
+};
 
 
 sensors.potentiometer = {};
@@ -1200,6 +1208,7 @@ sensors.timer.sensebox = sensors.timer.ev3;
 sensors.timer.robotino = sensors.timer.ev3;
 sensors.timer.txt4 = sensors.timer.ev3;
 sensors.timer.rcj = sensors.timer.ev3;
+sensors.timer.esp32py = sensors.timer.ev3;
 
 sensors.touch = {};
 sensors.touch.ev3 = {
@@ -1425,6 +1434,32 @@ sensorsAll.thymio = [sensors.key.thymio, sensors.infrared.thymio, sensors.irhori
 sensorsAll.robotino = [sensors.touch.robotino, sensors.infrared.robotino, sensors.odometry.robotino, sensors.timer.robotino, sensors.optical.robotino, sensors.detectmark.robotino, sensors.out.robotino, sensors.camera.robotino];
 sensorsAll.spike = [sensors.touch.spike, sensors.colour.spike, sensors.ultrasonic.spike, sensors.key.spike, sensors.timer.spike, sensors.gesture.spike, sensors.gyro.spike, sensors.encoder.spike];
 sensorsAll.rcj = [sensors.touchkey.rcj, sensors.colour.rcj, sensors.ultrasonic.rcj, sensors.timer.rcj, sensors.gyro.rcj, sensors.touch.rcj, sensors.inductive.rcj];
+sensors.touch.esp32py = {
+    title: 'TOUCH', modes: [{name: 'PRESSED', type: 'Boolean', question: true}], ports: 'CONFIGURATION', esp32pyConfigType: 'touch'
+};
+sensors.ultrasonic.esp32py = {
+    title: 'ULTRASONIC', modes: [{name: 'DISTANCE', type: 'Number', unit: 'CM', question: true}], ports: 'CONFIGURATION', esp32pyConfigType: 'ultrasonic'
+};
+sensors.colour.esp32py = {
+    title: 'COLOUR', modes: [
+        {name: 'COLOUR', type: 'Colour', value: '#1e5aa8'},
+        {name: 'RGB', type: 'Array_Number'},
+        {name: 'LIGHT', type: 'Number', unit: 'PERCENT', value: 50}
+    ], ports: 'CONFIGURATION', esp32pyConfigType: 'colour', esp32pyModeAware: true
+};
+sensors.gyro.esp32py = {
+    title: 'GYRO', modes: [
+        {name: 'ANGLE', type: 'Number', unit: 'DEGREE'},
+        {name: 'RATE', type: 'Number', unit: 'OMEGA'}
+    ], ports: [['RCJ gyro', '_K']], portsHidden: true
+};
+sensors.touchkey.esp32py = {
+    title: 'TOUCHKEY', modes: [{name: 'PRESSED', type: 'Boolean', question: true}], ports: [['LEFT', 'LEFT'], ['RIGHT', 'RIGHT']]
+};
+sensors.inductive.esp32py = {
+    title: 'INDUCTIVE', modes: [{name: 'PRESENCE', type: 'Boolean'}], ports: 'CONFIGURATION', esp32pyConfigType: 'inductive'
+};
+sensorsAll.esp32py = [sensors.out.esp32py, sensors.pin.esp32py, sensors.timer.esp32py];
 function initSensors() {
     for (var sensor in sensors) {
         if (sensors.hasOwnProperty(sensor)) {
@@ -1444,7 +1479,6 @@ Blockly.Blocks['robSensors_getSample'] = {
         Blockly.Blocks['robSensors_generic_all'].init.call(this, sensorsAll[this.workspace.device]);
     }
 };
-
 
 
 
